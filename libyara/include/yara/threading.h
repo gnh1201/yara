@@ -40,6 +40,19 @@ typedef HANDLE YR_MUTEX;
 
 #define YR_TLS __declspec(thread)
 
+#elif defined(__wasi__)
+
+#include <stdint.h>
+
+typedef uint32_t YR_THREAD_ID;
+typedef struct
+{
+  void* value;
+} YR_THREAD_STORAGE_KEY;
+typedef int YR_MUTEX;
+
+#define YR_TLS
+
 #else
 
 #include <pthread.h>

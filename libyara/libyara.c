@@ -52,7 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 YR_THREAD_STORAGE_KEY yr_yyfatal_trampoline_tls;
 YR_THREAD_STORAGE_KEY yr_trycatch_trampoline_tls;
 
-#if !(_WIN32 || __CYGWIN__)
+#if !(_WIN32 || __CYGWIN__ || __wasi__)
 
 #include <pthread.h>
 #include <signal.h>
