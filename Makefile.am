@@ -278,6 +278,9 @@ endif
 pkgconfigdir = $(libdir)/pkgconfig
 nodist_pkgconfig_DATA = yara.pc
 
+if BUILD_WASI
+bin_PROGRAMS =
+else
 bin_PROGRAMS = yara yarac
 
 yara_SOURCES = \
@@ -300,6 +303,7 @@ yarac_SOURCES = \
    cli/yarac.c
 
 yarac_LDADD = libyara.la
+endif
 
 tests_mapper_SOURCES = tests/mapper.c
 tests_mapper_CFLAGS = -O0

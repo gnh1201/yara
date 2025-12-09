@@ -111,6 +111,69 @@ void* yr_thread_storage_get_value(YR_THREAD_STORAGE_KEY* storage)
 }
 
 
+#elif defined(__wasi__)
+
+YR_THREAD_ID yr_current_thread_id(void)
+{
+  return 0;
+}
+
+
+int yr_mutex_create(YR_MUTEX* mutex)
+{
+  (void) mutex;
+  return ERROR_SUCCESS;
+}
+
+
+int yr_mutex_destroy(YR_MUTEX* mutex)
+{
+  (void) mutex;
+  return ERROR_SUCCESS;
+}
+
+
+int yr_mutex_lock(YR_MUTEX* mutex)
+{
+  (void) mutex;
+  return ERROR_SUCCESS;
+}
+
+
+int yr_mutex_unlock(YR_MUTEX* mutex)
+{
+  (void) mutex;
+  return ERROR_SUCCESS;
+}
+
+
+int yr_thread_storage_create(YR_THREAD_STORAGE_KEY* storage)
+{
+  storage->value = NULL;
+  return ERROR_SUCCESS;
+}
+
+
+int yr_thread_storage_destroy(YR_THREAD_STORAGE_KEY* storage)
+{
+  storage->value = NULL;
+  return ERROR_SUCCESS;
+}
+
+
+int yr_thread_storage_set_value(YR_THREAD_STORAGE_KEY* storage, void* value)
+{
+  storage->value = value;
+  return ERROR_SUCCESS;
+}
+
+
+void* yr_thread_storage_get_value(YR_THREAD_STORAGE_KEY* storage)
+{
+  return storage->value;
+}
+
+
 #else  // POSIX implementation
 
 

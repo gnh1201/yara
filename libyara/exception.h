@@ -143,6 +143,50 @@ static LONG CALLBACK exception_handler(PEXCEPTION_POINTERS ExceptionInfo)
 
 #endif
 
+#elif defined(__wasi__)
+
+#include <setjmp.h>
+
+#if 0 == YR_DEBUG_VERBOSITY
+#define YR_DEBUG_INDENT_INITIAL 0
+#define YR_DEBUG_INDENT_SET(x)  ;
+#else
+extern YR_TLS int yr_debug_indent;
+#define YR_DEBUG_INDENT_INITIAL yr_debug_indent
+#define YR_DEBUG_INDENT_SET(x)  yr_debug_indent = (x);
+
+#endif
+
+#define YR_TRYCATCH(_do_, _try_clause_, _catch_clause_)               \
+  do                                                                  \
+  {                                                                   \
+    if (_do_)                                                         \
+    {                                                                 \
+      int yr_debug_indent_before_jump = YR_DEBUG_INDENT_INITIAL;      \
+      jumpinfo ji;                                                    \
+      ji.memfault_from = 0;                                           \
+      ji.memfault_to = 0;                                             \
+      jmp_buf jb;                                                     \
+      ji.jump_back = (void*) &jb;                                     \
+      yr_thread_storage_set_value(&yr_trycatch_trampoline_tls, &ji);  \
+      if (setjmp(jb) == 0)                                            \
+      {                                                               \
+        _try_clause_                                                  \
+      }                                                               \
+      else                                                            \
+      {                                                               \
+        YR_DEBUG_INDENT_SET(yr_debug_indent_before_jump);             \
+                                                                      \
+        _catch_clause_                                                \
+      }                                                               \
+      yr_thread_storage_set_value(&yr_trycatch_trampoline_tls, NULL); \
+    }                                                                 \
+    else                                                              \
+    {                                                                 \
+      _try_clause_                                                    \
+    }                                                                 \
+  } while (0)
+
 #else
 
 #if defined(__APPLE__) || defined(__linux__) || defined(_AIX)

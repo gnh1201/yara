@@ -37,6 +37,29 @@ case $host_alias in
      i?86-*-mingw*) CFLAGS="$CFLAGS -D__MINGW_USE_VC2005_COMPAT" ;;
 esac
 
+case $host_os in
+  wasi*)
+    target_wasi=yes
+    ;;
+  *)
+    target_wasi=no
+    ;;
+esac
+
+if test x$target_wasi = xyes; then
+  WASI_EMULATION_FLAGS="-D_WASI_EMULATED_MMAN -D_WASI_EMULATED_SIGNAL -mllvm -wasm-enable-sjlj"
+  WASI_EMULATION_LIBS="-lwasi-emulated-mman -lwasi-emulated-signal"
+  CFLAGS="$CFLAGS $WASI_EMULATION_FLAGS"
+  LIBS="$LIBS $WASI_EMULATION_LIBS"
+  PC_LIBS_PRIVATE="$PC_LIBS_PRIVATE $WASI_EMULATION_LIBS"
+else
+  WASI_EMULATION_FLAGS=""
+  WASI_EMULATION_LIBS=""
+fi
+
+AC_SUBST([WASI_EMULATION_FLAGS])
+AC_SUBST([WASI_EMULATION_LIBS])
+
 AC_ARG_ENABLE([proc-scan],
   [AS_HELP_STRING([--disable-proc-scan], [disable process scanning])],
   [if test x$enableval = xyes; then
@@ -85,11 +108,17 @@ AC_ARG_ENABLE([proc-scan],
 
 
 
-ACX_PTHREAD(
-    [LIBS="$PTHREAD_LIBS $LIBS"
-     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-     CC="$PTHREAD_CC"],
-    [AC_MSG_ERROR([pthread API support is required.])])
+if test x$target_wasi = xyes; then
+  PTHREAD_LIBS=""
+  PTHREAD_CFLAGS=""
+  PTHREAD_CC="$CC"
+else
+  ACX_PTHREAD(
+      [LIBS="$PTHREAD_LIBS $LIBS"
+       CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+       CC="$PTHREAD_CC"],
+      [AC_MSG_ERROR([pthread API support is required.])])
+fi
 
 AC_CHECK_LIB(m, isnan)
 AC_CHECK_LIB(m, log2)
@@ -374,6 +403,7 @@ AM_CONDITIONAL([PROFILING_ENABLED], [test x$profiling_enabled = xtrue])
 AM_CONDITIONAL([OPTIMIZATION], [test x$optimization = xtrue])
 AM_CONDITIONAL([ADDRESS_SANITIZER], [test x$address_sanitizer = xtrue])
 AM_CONDITIONAL([UB_SANITIZER], [test x$undefined_behaviour_sanitizer = xtrue])
+AM_CONDITIONAL([BUILD_WASI], [test x$target_wasi = xyes])
 AM_CONDITIONAL([CUCKOO_MODULE], [test x$build_cuckoo_module = xtrue])
 AM_CONDITIONAL([MAGIC_MODULE], [test x$build_magic_module = xtrue])
 AM_CONDITIONAL([HASH_MODULE], [test x$build_hash_module = xtrue])
